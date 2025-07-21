@@ -55,10 +55,18 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: 构建镜像
+      - name: 构建镜像（带版本号）
         run: |
           docker build -f Dockerfile.distroless --no-cache --build-arg ANKI_VERSION=${{ needs.check-image.outputs.tag_name }} -t ${{ secrets.DOCKERHUB_USERNAME }}/anki-sync-server:${{ needs.check-image.outputs.tag_name }} .
+          
+      - name: 标记一个最新版本（latest）
+        run: |
+          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/anki-sync-server:${{ needs.check-image.outputs.tag_name }} ${{ secrets.DOCKERHUB_USERNAME }}/anki-sync-server:latest
 
-      - name: 推送镜像
+      - name: 推送镜像（带版本号）
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/anki-sync-server:${{ needs.check-image.outputs.tag_name }}
+          
+      - name: 推送镜像 (latest)
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/anki-sync-server:latest
