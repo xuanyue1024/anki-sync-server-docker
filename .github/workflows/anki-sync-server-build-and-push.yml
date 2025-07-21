@@ -18,6 +18,7 @@ jobs:
           release_info=$(curl -s $api_url)
           tag_name=$(echo $release_info | jq -r .tag_name)
           asset_url="https://raw.githubusercontent.com/${repo}/main/docs/syncserver/Dockerfile.distroless"
+          echo "tag_name=${tag_name}"
           echo "tag_name=${tag_name}" >> $GITHUB_OUTPUT
           echo "asset_url=${asset_url}" >> $GITHUB_OUTPUT
 
