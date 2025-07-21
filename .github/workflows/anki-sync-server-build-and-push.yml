@@ -17,7 +17,7 @@ jobs:
           api_url="https://api.github.com/repos/${repo}/releases/latest"
           release_info=$(curl -s $api_url)
           tag_name=$(echo $release_info | jq -r .tag_name)
-          asset_url="https://github.com/ankitects/anki/blob/main/docs/syncserver/Dockerfile.distroless"
+          asset_url="https://raw.githubusercontent.com/${repo}/main/docs/syncserver/Dockerfile.distroless"
           echo "tag_name=${tag_name}" >> $GITHUB_OUTPUT
           echo "asset_url=${asset_url}" >> $GITHUB_OUTPUT
 
@@ -27,7 +27,7 @@ jobs:
         run: |
           IMAGE_NAME="${{ secrets.DOCKERHUB_USERNAME }}/anki-sync-server"
           TAG="${{ steps.get_release.outputs.tag_name }}"
-          CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://hub.docker.com/v2/repositories/${IMAGE_NAME}/tags/${TAG}/")
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://hub.docker.com/v2/namespaces/${IMAGE_NAME}/repositories/anki-sync-server/tags/${TAG}")
           if [ "$CODE" = "200" ]; then
             echo "exists=true" >> $GITHUB_OUTPUT
           else
