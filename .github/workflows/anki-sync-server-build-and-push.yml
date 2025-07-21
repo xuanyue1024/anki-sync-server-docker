@@ -1,16 +1,19 @@
-name: Build and Push on Upstream Release
+name: 构建和推送anki-sync-server docker镜像
 
 on:
   schedule:
-    - cron: '0 */6 * * *' # 每6小时检查一次
+    - cron: '0 3 * * *'
   workflow_dispatch:
 
 jobs:
-  build-and-push:
+  check-image:
     runs-on: ubuntu-latest
+    outputs:
+      exists: ${{ steps.check_image.outputs.exists }}
+      tag_name: ${{ steps.get_release.outputs.tag_name }}
+      asset_url: ${{ steps.get_release.outputs.asset_url }}
     steps:
-      # 1. 获取上游仓库最新 release 信息
-      - name: Check latest release from upstream
+      - name: 获取ankitects/ankif最新发行版tag
         id: get_release
         run: |
           repo="ankitects/anki"
@@ -18,48 +21,44 @@ jobs:
           release_info=$(curl -s $api_url)
           tag_name=$(echo $release_info | jq -r .tag_name)
           asset_url="https://raw.githubusercontent.com/${repo}/main/docs/syncserver/Dockerfile.distroless"
-          echo "tag_name=${tag_name}"
           echo "tag_name=${tag_name}" >> $GITHUB_OUTPUT
           echo "asset_url=${asset_url}" >> $GITHUB_OUTPUT
 
-      # 2. 检查 Docker Hub 是否已有该 tag
-      - name: Check if image already exists on Docker Hub
+      - name: 检查docker hub中是否存在该发行版
         id: check_image
         run: |
           TAG="${{ steps.get_release.outputs.tag_name }}"
           CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://hub.docker.com/v2/namespaces/${{ secrets.DOCKERHUB_USERNAME }}/repositories/anki-sync-server/tags/${TAG}")
-          echo "响应的code为:${CODE}"
           if [ "$CODE" = "200" ]; then
             echo "exists=true" >> $GITHUB_OUTPUT
           else
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
-      # 3. 如果已存在，跳过后续步骤
-      - name: Stop if image exists
-        if: steps.check_image.outputs.exists == 'true'
+      - name: 检查结果
         run: |
-          echo "当前版本镜像已经存在，跳过构建"
-          exit 0
+          echo "镜像是否存在: ${{ steps.check_image.outputs.exists }}"
+          echo "tag: ${{ steps.get_release.outputs.tag_name }}"
 
-      # 4. 下载 release 文件
-      - name: Download file from release
+  build-and-push:
+    needs: check-image
+    if: needs.check-image.outputs.exists != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 下载docker镜像构建文件
         run: |
-          curl -L "${{ steps.get_release.outputs.asset_url }}" -o ./Dockerfile.distroless
+          curl -L "${{ needs.check-image.outputs.asset_url }}" -o ./Dockerfile.distroless
 
-      # 5. 登录 Docker Hub
-      - name: Login to Docker Hub
+      - name: 登录 Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 6. 构建 Docker 镜像
-      - name: Build Docker image
+      - name: 构建镜像
         run: |
-          docker build -f Dockerfile.distroless --no-cache --build-arg ANKI_VERSION=${{ steps.get_release.outputs.tag_name }} -t ${{ secrets.DOCKERHUB_USERNAME }}/anki-sync-server:${{ steps.get_release.outputs.tag_name }} .
+          docker build -f Dockerfile.distroless --no-cache --build-arg ANKI_VERSION=${{ needs.check-image.outputs.tag_name }} -t ${{ secrets.DOCKERHUB_USERNAME }}/anki-sync-server:${{ needs.check-image.outputs.tag_name }} .
 
-      # 7. 推送镜像到 Docker Hub
-      - name: Push Docker image
+      - name: 推送镜像
         run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/anki-sync-server:${{ steps.get_release.outputs.tag_name }}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/anki-sync-server:${{ needs.check-image.outputs.tag_name }}
