@@ -54,19 +54,30 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+          
+      - name: 登录 阿里云容器镜像服务
+        uses: aliyun/acr-login@v1
+        with:
+          login-server: "${{ secrets.ALIYUN_ACR_REGISTRY }}"
+          username: "${{ secrets.ALIYUN_ACR_USERNAME }}"
+          password: "${{ secrets.ALIYUN_ACR_PASSWORD }}"
 
       - name: 构建镜像（带版本号）
         run: |
           docker build -f Dockerfile.distroless --no-cache --build-arg ANKI_VERSION=${{ needs.check-image.outputs.tag_name }} -t ${{ secrets.DOCKERHUB_USERNAME }}/anki-sync-server:${{ needs.check-image.outputs.tag_name }} .
           
-      - name: 标记一个最新版本（latest）
+      - name: 标记一个最新版本（latest）和阿里云带版本号版本
         run: |
           docker tag ${{ secrets.DOCKERHUB_USERNAME }}/anki-sync-server:${{ needs.check-image.outputs.tag_name }} ${{ secrets.DOCKERHUB_USERNAME }}/anki-sync-server:latest
+          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/anki-sync-server:${{ needs.check-image.outputs.tag_name }} ${{ secrets.ALIYUN_ACR_REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/anki-sync-server:latest
+          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/anki-sync-server:${{ needs.check-image.outputs.tag_name }} ${{ secrets.ALIYUN_ACR_REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/anki-sync-server:${{ needs.check-image.outputs.tag_name }}
 
       - name: 推送镜像（带版本号）
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/anki-sync-server:${{ needs.check-image.outputs.tag_name }}
+          docker push ${{ secrets.ALIYUN_ACR_REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/anki-sync-server:${{ needs.check-image.outputs.tag_name }}
           
       - name: 推送镜像 (latest)
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/anki-sync-server:latest
+          docker push ${{ secrets.ALIYUN_ACR_REGISTRY }}/${{ secrets.DOCKERHUB_USERNAME }}/anki-sync-server:latest
