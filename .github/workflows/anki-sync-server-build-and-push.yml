@@ -58,9 +58,10 @@ jobs:
       - name: 登录 阿里云容器镜像服务
         uses: aliyun/acr-login@v1
         with:
-          login-server: "${{ secrets.ALIYUN_ACR_REGISTRY }}"
+          login-server: ${{ secrets.ALIYUN_ACR_REGISTRY }}
           username: "${{ secrets.ALIYUN_ACR_USERNAME }}"
           password: "${{ secrets.ALIYUN_ACR_PASSWORD }}"
+          region-id: cn-chengdu
 
       - name: 构建镜像（带版本号）
         run: |
