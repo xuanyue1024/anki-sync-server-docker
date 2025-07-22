@@ -10,8 +10,5 @@ jobs:
     runs-on: ubuntu-latest
     steps: 
       - name: 登录 阿里云容器镜像服务
-        uses: aliyun/acr-login@v1
-        with:
-          login-server: ${{ secrets.ALIYUN_ACR_REGISTRY }}
-          username: ${{ secrets.ALIYUN_ACR_USERNAME }}
-          password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
+        run: |
+          echo "${{ secrets.ALIYUN_ACR_PASSWORD }}" | docker login --username=${{ secrets.ALIYUN_ACR_USERNAME }} crpi-9ovxnbm4m43a0mwo5y.cn-chengdu.personal.cr.aliyuncs.com --password-stdin
