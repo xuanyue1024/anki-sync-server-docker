@@ -11,4 +11,5 @@ jobs:
     steps: 
       - name: 登录 阿里云容器镜像服务
         run: |
-          echo "${{ secrets.ALIYUN_ACR_PASSWORD }}" | docker login --username=${{ secrets.ALIYUN_ACR_USERNAME }} crpi-9ovxnbm4ma0mwo5y.cn-chengdu.personal.cr.aliyuncs.com --password-stdin
+          docker login --username=${{ secrets.ALIYUN_ACR_USERNAME }} crpi-9ovxnbm4ma0mwo5y.cn-chengdu.personal.cr.aliyuncs.com
+          ${{ secrets.ALIYUN_ACR_PASSWORD }}
