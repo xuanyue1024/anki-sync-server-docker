@@ -56,13 +56,8 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           
       - name: 登录 阿里云容器镜像服务
-        uses: aliyun/acr-login@v1
-        env:
-          DOCKER_CONFIG: null
-        with:
-          login-server: ${{ secrets.ALIYUN_ACR_REGISTRY }}
-          username: ${{ secrets.ALIYUN_ACR_USERNAME }}
-          password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
+        run: |
+          echo "${{ secrets.ALIYUN_ACR_PASSWORD }}" | docker login --username=${{ secrets.ALIYUN_ACR_USERNAME }} --password-stdin ${{ secrets.ALIYUN_ACR_REGISTRY }}
 
       - name: 构建镜像（带版本号）
         run: |
