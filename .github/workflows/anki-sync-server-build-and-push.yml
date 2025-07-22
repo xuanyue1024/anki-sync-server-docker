@@ -55,11 +55,10 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           
-      - name: 清除 DOCKER_CONFIG 环境变量
-        run: unset DOCKER_CONFIG
-          
       - name: 登录 阿里云容器镜像服务
         uses: aliyun/acr-login@v1
+        env:
+          DOCKER_CONFIG: null
         with:
           login-server: ${{ secrets.ALIYUN_ACR_REGISTRY }}
           username: ${{ secrets.ALIYUN_ACR_USERNAME }}
